@@ -2,8 +2,8 @@ from fastapi import APIRouter
 import logging
 import uuid
 
-from backend.core.extraction_rules import extract_steps_from_text
-from backend.models.schemas import ExtractRequest, ExtractResponse
+from backend.core.extraction_rules import extract_steps_with_proof
+from backend.models.schemas import ExtractRequest, ExtractResponse,StepProof
 from backend.core.errors import AppError, ValidationAppError
 
 router=APIRouter (prefix="/api" , tags=["extract"])
@@ -23,9 +23,16 @@ async def extract(req: ExtractRequest) -> ExtractResponse:
     if "boom" in raw.lower():
         raise AppError("iş kuralı: 'boom' yasaklı anahtar", code="rule_boom")
     
-    steps = extract_steps_from_text(raw)
+    steps = extract_steps_with_proof(raw)
     if not steps:
-        steps=["1) Taslak adım"]
+        steps=[
+            StepProof(
+                action="Taslak adım",
+                start_idx=0,
+                end_idx=0,
+                snippet=""
+            )
+        ]
 
     flow_id = str(uuid.uuid4())
 

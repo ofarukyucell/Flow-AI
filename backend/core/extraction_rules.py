@@ -5,7 +5,7 @@ from typing import List
 import json
 from pathlib import Path
 from backend.core.regex_patterns import VERB_SUFFIX_PATTERN
-
+from backend.models.schemas import StepProof
 
 log = logging.getLogger("flowai.extract")
 
@@ -126,4 +126,37 @@ def extract_steps_from_text(text:str)->List[str]:
                 steps.append(cmd)
 
     log.info("regex matched %d step(s)",len(steps))
+    return steps
+
+def extract_steps_with_proof(text:str) -> List[StepProof]:
+    raw_steps = extract_steps_from_text(text)
+    
+    steps:List[StepProof]=[]
+
+    lower_text = text.lower()
+    search_start = 0
+
+    for action in raw_steps:
+        normalized=action.lower()
+
+        idx=lower_text.find(normalized, search_start)
+        if idx == -1:
+            start_idx = search_start
+            end_idx = search_start
+            snippet= ""
+        else:
+            start_idx=idx
+            end_idx=idx+len(action)
+            snippet=text[start_idx:end_idx]
+
+            search_start=end_idx
+
+        steps.append(
+            StepProof(
+                action=action,
+                start_idx=start_idx,
+                end_idx=end_idx,
+                snippet=snippet
+            )
+        )   
     return steps
