@@ -4,6 +4,8 @@ import logging
 from typing import List
 import json
 from pathlib import Path
+from backend.core.regex_patterns import VERB_SUFFIX_PATTERN
+
 
 log = logging.getLogger("flowai.extract")
 
@@ -60,7 +62,7 @@ NOISE_REGEX = re.compile(rf"\b({'|'.join(NOISE)})\b",flags=re.IGNORECASE)
 MULTISPACE = re.compile(r"\s+")
 
 _ESCAPED = sorted((re.escape(v)for v in CORE_VERBS),key=len,reverse=True)
-VERB_REGEX=re.compile(rf"\b({'|'.join(_ESCAPED)})\b",flags=re.IGNORECASE |re.UNICODE)
+VERB_REGEX=re.compile(rf"\b((?:{'|'.join(_ESCAPED)}))(?:{VERB_SUFFIX_PATTERN})\b",flags=re.IGNORECASE | re.UNICODE)
 
 def _normalize(text: str) ->str:
     t= text.strip().lower()
@@ -75,24 +77,23 @@ def _denoise(piece: str) ->str:
     p=MULTISPACE.sub(" ",p).strip(" .:---")
     return p
 
-def _extract_command_from_piece(piece:str) -> str | None:
+def _extract_commands_from_piece(piece:str) -> list[str]:
     """
     Parça içinde öncelikle tanımlı fiilleri ara.
     Bulunamazsa. ilk kelime + varsa ikinci kelime ile bir 'komut' tahmini yap.
     """
 
-    m=VERB_REGEX.search(piece)
-    if m:
-        return m.group(1).strip()
+    matches=[m.group(1).strip() for m in VERB_REGEX.finditer(piece)]
+    if matches:
+        return matches
 
-    
     tokens = piece.split()
     if not tokens:
-        return None
+        return []
     
     if len(tokens) == 1 :
-        return tokens[0]
-    return " ".join(tokens[:2])
+        return [tokens[0]]
+    return [" ".join(tokens[:2])]
 
 def extract_steps_from_text(text:str)->List[str]:
     """
@@ -113,14 +114,16 @@ def extract_steps_from_text(text:str)->List[str]:
         cleaned = _denoise(raw)
         if not cleaned:
             continue
-        cmd = _extract_command_from_piece(cleaned)
-        if not cmd:
-            continue
-        if len(cmd)<2:
-            continue
-        cmd = cmd.strip(" .,:;")
-        if cmd and cmd not in seen:
-            seen.add(cmd)
-            steps.append(cmd)
+        cmds = _extract_commands_from_piece(cleaned)
+        for cmd in cmds:
+            if not cmd:
+                continue
+            if len(cmd) < 2:
+                continue
+            cmd =cmd.strip(" .,:;")
+            if cmd and cmd not in seen:
+                seen.add(cmd)
+                steps.append(cmd)
+
     log.info("regex matched %d step(s)",len(steps))
     return steps
