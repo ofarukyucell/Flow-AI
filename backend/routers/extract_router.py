@@ -2,6 +2,7 @@ from fastapi import APIRouter
 import logging
 import uuid
 
+from backend.core.extraction_rules import extract_steps_from_text
 from backend.models.schemas import ExtractRequest, ExtractResponse
 from backend.core.errors import AppError, ValidationAppError
 
@@ -22,7 +23,7 @@ async def extract(req: ExtractRequest) -> ExtractResponse:
     if "boom" in raw.lower():
         raise AppError("iş kuralı: 'boom' yasaklı anahtar", code="rule_boom")
     
-    steps = [s.strip() for s in raw.replace(">","->").split("->")if s.strip()]
+    steps = extract_steps_from_text(raw)
     if not steps:
         steps=["1) Taslak adım"]
 
