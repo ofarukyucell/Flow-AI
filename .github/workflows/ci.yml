@@ -32,3 +32,10 @@ jobs:
       - name: Run tests
         run: |
           pytest -q
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker build (sanity check)
+        run: |
+          docker build -f dockerfile -t flowai-backend:ci .
