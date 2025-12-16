@@ -38,4 +38,4 @@ jobs:
 
       - name: Docker build (sanity check)
         run: |
-          docker build -f dockerfile -t flowai-backend:ci .
+          docker build -f dockerfile -t flowai-backend:${{ github.sha }} .
