@@ -39,3 +39,11 @@ jobs:
       - name: Docker build (sanity check)
         run: |
           docker build -f dockerfile -t flowai-backend:${{ github.sha }} .
+
+      - name: Smoke test(run container and hit /health)
+        run: |
+          docker run -d --name flowai-smoke -p 8000:8000 flowai-backend:${{ github.sha }}
+          sleep 2
+          curl -f http://localhost:8000/health
+          docker logs flowai-smoke --tail-50
+          docker rm -f flowai-smoke
