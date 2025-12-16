@@ -42,8 +42,17 @@ jobs:
 
       - name: Smoke test(run container and hit /health)
         run: |
-          docker run -d --name flowai-smoke -p 8000:8000 flowai-backend:${{ github.sha }}
-          sleep 2
-          curl -f http://localhost:8000/health
-          docker logs flowai-smoke --tail-50
+          docker run -d --name flowai-smoke -p 8000:8000 -e APP_NAME="FlowAI" -e APP_VERSİON="0.1.0" -e DEBUG="false" flowai-backend:${{ github.sha }}
+          for i in {1..20}; do
+           if curl -fsS http://localhost:8000/health > /dev/null; then
+            echo "Health OK"
+            break
+           fi
+           sleep 1
+          done
+          docker ps -a
+          docker logs flowai-smoke --tail=200
+          curl -fsS https://localhost:8000/health
           docker rm -f flowai-smoke
+          
+        
