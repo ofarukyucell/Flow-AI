@@ -40,19 +40,32 @@ jobs:
         run: |
           docker build -f dockerfile -t flowai-backend:${{ github.sha }} .
 
-      - name: Smoke test(run container and hit /health)
+      - name: Smoke test (run container and hit /health)
         run: |
-          docker run -d --name flowai-smoke -p 8000:8000 -e APP_NAME="FlowAI" -e APP_VERSİON="0.1.0" -e DEBUG="false" flowai-backend:${{ github.sha }}
-          for i in {1..20}; do
-           if curl -fsS http://localhost:8000/health > /dev/null; then
-            echo "Health OK"
-            break
-           fi
-           sleep 1
+          set -e
+
+          # Önce eski kaldıysa temizle (failsafe)
+          docker rm -f flowai-smoke || true
+
+          # Container'ı env ile kaldır
+          docker run -d --name flowai-smoke -p 8000:8000 \
+            -e APP_NAME="${APP_NAME}" \
+            -e APP_VERSION="${APP_VERSION}" \
+            -e DEBUG="${DEBUG}" \
+            flowai-backend:${{ github.sha }}
+      
+          # Ayağa kalkması için kısa bekleme + retry
+          for i in {1..15}; do
+            if curl -fsS http://localhost:8000/health; then
+              echo "Smoke OK"
+              exit 0
+            fi
+            echo "Waiting for app... ($i/15)"
+            sleep 1
           done
-          docker ps -a
-          docker logs flowai-smoke --tail=200
-          curl -fsS https://localhost:8000/health
-          docker rm -f flowai-smoke
-          
+      
+          echo "Smoke FAILED: logs below"
+          docker logs flowai-smoke || true
+          exit 1
+    
         
