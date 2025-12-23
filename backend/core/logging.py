@@ -2,8 +2,15 @@ import logging
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
-def setup_logging(level=logging.INFO):
-        fmt = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+def setup_logging(level=logging.INFO) -> None:
+
+        fmt = (
+                '{"time":"%(asctime)s",'
+                '"level":"%(levelname)s",'
+                '"logger":"%(name)s",'
+                '"msg":"%(message)s"}'
+        )
+
         datefmt = "%Y-%m-%d %H:%M:%S"
 
         logging.basicConfig(level=level, format=fmt,datefmt=datefmt)

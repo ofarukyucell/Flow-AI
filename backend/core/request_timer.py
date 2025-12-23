@@ -17,7 +17,7 @@ class RequestTimerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request:Request, call_next:Callable) -> Response:
         start = perf_counter()
         try:
-            Response = await call_next(request)
+            response = await call_next(request)
         
         except Exception:
             duration_ms = (perf_counter() - start) * 1000
@@ -36,8 +36,8 @@ class RequestTimerMiddleware(BaseHTTPMiddleware):
             "%s %s %s %.2fms",
             request.method,
             request.url.path,
-            Response.status_code,
+            response.status_code,
             duration_ms,
             extra = {"path": request.url.path},
         )
-        return Response
+        return response
