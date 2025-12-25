@@ -8,6 +8,9 @@ from backend.routers.extract_router import router as extract_router
 from backend.core.config import settings
 from backend.core.error_handler import register_exception_handlers
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 
 
@@ -18,6 +21,16 @@ app = FastAPI(
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
 )
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = ROOT_DIR / "Frontend"
+
+if FRONTEND_DIR.exists():
+    app.mount("/static",StaticFiles(directory=str(FRONTEND_DIR)),name="static")
+
+    @app.get("/",include_in_schema=False)
+    def serve_index():
+        return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 app.add_middleware(RequestTimerMiddleware)
 
