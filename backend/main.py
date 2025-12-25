@@ -24,9 +24,6 @@ app = FastAPI(
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = ROOT_DIR / "Frontend"
-print("ROOT_DIR=",ROOT_DIR)
-print("FRONTEND_DIR=",FRONTEND_DIR)
-print("FRONTEND_DIR exists=",FRONTEND_DIR.exists())
 
 if FRONTEND_DIR.exists():
     app.mount("/static",StaticFiles(directory=str(FRONTEND_DIR)),name="static")
