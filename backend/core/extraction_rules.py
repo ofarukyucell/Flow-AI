@@ -14,7 +14,7 @@ r"giriş yap",r"çıkış yap",r"kaydol",r"kayıt ol",r"doğrula", r"onayla",
     r"temizle", r"analiz et", r"raporla", r"indir", r"yükle", r"oluştur",
     r"sil", r"güncelle", r"ara", r"paylaş", r"gönder", r"al", r"yapılandır",
     # en kısa kök varyantları (tek kelime komutlar için)
-    r"temizle", r"analiz", r"raporla", r"indir", r"yükle", r"aç", r"kapat",
+    r"temizle", r"analiz", r"raporla", r"indir", r"yükle", r"aç", r"kapat",r"bas",r"tıkla",r"tikla",r"seç",r"sec"
 ]
 
 def _load_core_verbs() ->list[str]:
@@ -136,6 +136,16 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
     lower_text = text.lower()
     search_start = 0
 
+    def classify_step(action: str) -> str:
+        a=action.lower()
+        if any (k in a for k in ["onay","kontrol","eğer","ise"]):
+            return "decision"
+        if any(k in a for k in["kapan","iptal","son"]):
+            return "terminal"
+        if any(k in a for k in["oluştur","aç","başlat"]):
+            return "action"
+        return "trigger"
+
     for action in raw_steps:
         normalized=action.lower()
 
@@ -156,7 +166,8 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
                 action=action,
                 start_idx=start_idx,
                 end_idx=end_idx,
-                snippet=snippet
+                snippet=snippet,
+                type=classify_step(action)
             )
         )   
     return steps

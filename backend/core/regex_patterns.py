@@ -16,7 +16,7 @@ VERB_SUFFIXES=[
     r"(tıktan|tikten|tuktan|tükten)",
     r"(tıktan sonra|tikten sonra|tuktan sonra|tükten sonra)",
     r"(dıktan|dikten|duktan|dükten)",
-    r"(dıktan sonda|dikten sonra|duktan sonra|dükten sonra)",
+    r"(dıktan sonra|dikten sonra|duktan sonra|dükten sonra)",
 
 
     r"(ıyor|iyor|uyor|üyor)",

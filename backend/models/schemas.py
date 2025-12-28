@@ -6,6 +6,7 @@ class StepProof(BaseModel):
     start_idx:int = Field(...,ge=0,description="Metin içinde başlangıç index")
     end_idx:int=Field(...,ge=0,description="metin içinde bitiş index(exclusive)")
     snippet:str=Field(...,description="Eşleşen ham parça")
+    type: str
 
 class ExtractRequest(BaseModel):
     source: Literal["text", "url","file"] = Field(...,description="Kaynak tipi")
