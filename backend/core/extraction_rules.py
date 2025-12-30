@@ -157,9 +157,25 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
 
         idx=lower_text.find(normalized, search_start)
         if idx == -1:
-            start_idx = search_start
-            end_idx = search_start
-            snippet= ""
+            sent_start = search_start
+
+            sent_end=text.find(".",sent_start)
+            if sent_end ==-1:
+                sent_end = len(text)
+            
+            start_idx = sent_start
+            end_idx = sent_end
+            snippet = text[start_idx:end_idx].strip()
+
+            if not snippet:
+                start_idx=0
+                end_idx=len(text)
+                snippet=text.strip()
+            
+            action=enrich_action(sentence=snippet,verb=action).enriched_action
+
+            search_start=sent_end
+            
         else:
             sent_start = text.rfind(".",0,idx)
             if sent_start == -1:
@@ -194,11 +210,17 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
         a=(s.action or "").strip()
 
         if ":" not in a:
+            filtered.append(s)
             continue
 
         verb,obj= [x.strip() for x in a.split(":",1)]
+
+        if not verb or not obj:
+            filtered.append(s)
+            continue
         
-        if not verb or not obj or verb.casefold() == obj.casefold():
+        if verb.casefold() == obj.casefold():
+            filtered.append(s)
             continue
 
         filtered.append(s)

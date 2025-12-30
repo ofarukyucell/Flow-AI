@@ -30,12 +30,13 @@ async def extract(req: ExtractRequest) -> ExtractResponse:
                 action="Taslak adım",
                 start_idx=0,
                 end_idx=0,
-                snippet=""
+                snippet="",
+                type="trigger"
             )
         ]
 
     flow_id = str(uuid.uuid4())
 
-    log.info("extract:done flow_id=%s steps=%d",flow_id,len(steps))
+    log.info("extract:start source=%s len=%d",req.source, len(str(req.payload)))
 
     return ExtractResponse(ok=True,flow_id=flow_id , steps=steps)    
