@@ -144,7 +144,11 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
             return "decision"
         if any(k in a for k in["kapan","iptal","son"]):
             return "terminal"
-        if any(k in a for k in["oluştur","aç","başlat"]):
+        ACTION_KEYS = [
+            "oluştur","aç","başlat","doldur","seç","bas","tıkla","tikla"
+            ,"gir","yaz","ekle","çıkar","sil","güncelle","yükle","indir","gönder"
+        ]
+        if any (k in a for k in ACTION_KEYS):
             return "action"
         return "trigger"
 
