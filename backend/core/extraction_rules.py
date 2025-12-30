@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from backend.core.regex_patterns import VERB_SUFFIX_PATTERN
 from backend.models.schemas import StepProof
+from backend.core.action_enrichment import enrich_action
 
 log = logging.getLogger("flowai.extract")
 
@@ -14,7 +15,8 @@ r"giriş yap",r"çıkış yap",r"kaydol",r"kayıt ol",r"doğrula", r"onayla",
     r"temizle", r"analiz et", r"raporla", r"indir", r"yükle", r"oluştur",
     r"sil", r"güncelle", r"ara", r"paylaş", r"gönder", r"al", r"yapılandır",
     # en kısa kök varyantları (tek kelime komutlar için)
-    r"temizle", r"analiz", r"raporla", r"indir", r"yükle", r"aç", r"kapat",r"bas",r"tıkla",r"tikla",r"seç",r"sec"
+    r"temizle", r"analiz", r"raporla", r"indir", r"yükle", r"aç", r"kapat",r"bas",
+    r"tıkla",r"tikla",r"seç",r"sec",r"doldur",r"giriş",r"gir"
 ]
 
 def _load_core_verbs() ->list[str]:
@@ -155,11 +157,23 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
             end_idx = search_start
             snippet= ""
         else:
-            start_idx=idx
-            end_idx=idx+len(action)
-            snippet=text[start_idx:end_idx]
+            sent_start = text.rfind(".",0,idx)
+            if sent_start == -1:
+                sent_start = 0
+            else:
+                sent_start = sent_start + 1
+            
+            sent_end= text.find(".", idx)
+            if sent_end== -1:
+                sent_end=len(text)
+            
+            start_idx=sent_start
+            end_idx=sent_end
+            snippet = text[start_idx:end_idx].strip()
 
-            search_start=end_idx
+            action=enrich_action(sentence=snippet, verb=action).enriched_action
+
+            search_start=sent_end
 
         steps.append(
             StepProof(
@@ -170,4 +184,19 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
                 type=classify_step(action)
             )
         )   
-    return steps
+    filtered: List[StepProof]=[]
+
+    for s in steps:
+        a=(s.action or "").strip()
+
+        if ":" not in a:
+            continue
+
+        verb,obj= [x.strip() for x in a.split(":",1)]
+        
+        if not verb or not obj or verb.casefold() == obj.casefold():
+            continue
+
+        filtered.append(s)
+
+    return filtered
