@@ -4,7 +4,7 @@ from backend.core.extraction_rules import extract_steps_with_proof
 from backend.models.schemas import StepProof
 
 def test_step_proof_basif_indices():
-    text= "giriş uyaptım ve analiz ettim; sonra raporladım."
+    text= "giriş yaptım ve analiz ettim; sonra raporladım."
     steps= extract_steps_with_proof(text)
 
     assert len(steps)>= 3

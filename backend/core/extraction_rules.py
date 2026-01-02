@@ -1,12 +1,13 @@
 from __future__ import annotations
 import re
 import logging
-from typing import List
+from typing import List,Tuple
 import json
 from pathlib import Path
 from backend.core.regex_patterns import VERB_SUFFIX_PATTERN
 from backend.models.schemas import StepProof
 from backend.core.action_enrichment import enrich_action
+from backend.core.step_canonicalizer import canonicalize_step
 
 log = logging.getLogger("flowai.extract")
 
@@ -53,6 +54,24 @@ STEP_SEPARATORS = [
 ]
 
 SEP_REGEX = re.compile(rf"(?:{'|'.join(STEP_SEPARATORS)})", flags=re.IGNORECASE)
+
+def _split_with_spans(text:str)-> List[tuple[int,int,str]]:
+    spans:List[tuple[int,int,str]]=[]
+    last=0
+    for m in SEP_REGEX.finditer(text):
+        start=last
+        end=m.start()
+        piece=text[start:end]
+        if piece.strip():
+            spans.append((start,end,piece))
+        last = m.end()
+    
+    if last < len(text):
+        piece=text[last:]
+        if piece.strip():
+            spans.append((last,len(text),piece))
+    return spans
+
 
 NOISE =[
     r"lütfen", r"önce", r"en son", r"ilk olarak", r"ikinci olarak", r"adım",
@@ -131,12 +150,7 @@ def extract_steps_from_text(text:str)->List[str]:
     return steps
 
 def extract_steps_with_proof(text:str) -> List[StepProof]:
-    raw_steps = extract_steps_from_text(text)
-    
     steps:List[StepProof]=[]
-
-    lower_text = text.lower()
-    search_start = 0
 
     def classify_step(action: str) -> str:
         a=action.lower()
@@ -146,64 +160,34 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
             return "terminal"
         ACTION_KEYS = [
             "oluştur","aç","başlat","doldur","seç","bas","tıkla","tikla"
-            ,"gir","yaz","ekle","çıkar","sil","güncelle","yükle","indir","gönder"
+            ,"gir","yaz","ekle","çıkar","sil","güncelle","yükle","indir","gönder","kaydol"
         ]
         if any (k in a for k in ACTION_KEYS):
             return "action"
         return "trigger"
+    spans=_split_with_spans(text)
 
-    for action in raw_steps:
-        normalized=action.lower()
+    for start_idx,end_idx,snippet in spans:
+        snippet=snippet.strip()
+        cleaned = _denoise(snippet.lower())
+        if not cleaned:
+            continue
 
-        idx=lower_text.find(normalized, search_start)
-        if idx == -1:
-            sent_start = search_start
+        cmds = _extract_commands_from_piece(cleaned)
+        for cmd in cmds:
+            action=enrich_action(sentence=snippet,verb=cmd).enriched_action
 
-            sent_end=text.find(".",sent_start)
-            if sent_end ==-1:
-                sent_end = len(text)
-            
-            start_idx = sent_start
-            end_idx = sent_end
-            snippet = text[start_idx:end_idx].strip()
-
-            if not snippet:
-                start_idx=0
-                end_idx=len(text)
-                snippet=text.strip()
-            
-            action=enrich_action(sentence=snippet,verb=action).enriched_action
-
-            search_start=sent_end
-            
-        else:
-            sent_start = text.rfind(".",0,idx)
-            if sent_start == -1:
-                sent_start = 0
-            else:
-                sent_start = sent_start + 1
-            
-            sent_end= text.find(".", idx)
-            if sent_end== -1:
-                sent_end=len(text)
-            
-            start_idx=sent_start
-            end_idx=sent_end
-            snippet = text[start_idx:end_idx].strip()
-
-            action=enrich_action(sentence=snippet, verb=action).enriched_action
-
-            search_start=sent_end
-
-        steps.append(
-            StepProof(
-                action=action,
-                start_idx=start_idx,
-                end_idx=end_idx,
-                snippet=snippet,
-                type=classify_step(action)
+            raw_snippet = text[start_idx:end_idx]
+            steps.append(
+                StepProof(
+                    action=action,
+                    start_idx=start_idx,
+                    end_idx=end_idx,
+                    snippet=raw_snippet,
+                    type=classify_step(action),
+                )
             )
-        )   
+    
     filtered: List[StepProof]=[]
 
     for s in steps:
@@ -220,9 +204,10 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
             continue
         
         if verb.casefold() == obj.casefold():
-            filtered.append(s)
             continue
 
         filtered.append(s)
+
+    filtered = [canonicalize_step(s) for s in filtered]
 
     return filtered
