@@ -1,12 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Literal, Any ,Dict,List
+from backend.models.flow import NodeType
 
 class StepProof(BaseModel):
     action:str = Field(...,description="Normalize edilmiş eylem kökü, ör:'giriş yap' ")
     start_idx:int = Field(...,ge=0,description="Metin içinde başlangıç index")
     end_idx:int=Field(...,ge=0,description="metin içinde bitiş index(exclusive)")
     snippet:str=Field(...,description="Eşleşen ham parça")
-    type: str
+    type: NodeType
 
 class ExtractRequest(BaseModel):
     source: Literal["text", "url","file"] = Field(...,description="Kaynak tipi")
