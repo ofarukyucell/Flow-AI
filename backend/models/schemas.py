@@ -18,3 +18,9 @@ class ExtractResponse(BaseModel):
     ok: bool=True
     flow_id:str = Field(...,description="oluşan flow için kimlik")
     steps:List[StepProof]=Field (default_factory=list,description="çıkarılan adımların kanıtlı listesi")
+
+class MermaidResponse(BaseModel):
+    ok: bool = True
+    flow_id: str = Field(...,description="oluşan flow için kimlik")
+    mermaid: str = Field(...,description="Mermaid Flowchart kodu")
+    

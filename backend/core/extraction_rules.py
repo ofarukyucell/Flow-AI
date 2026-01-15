@@ -8,6 +8,7 @@ from backend.core.regex_patterns import VERB_SUFFIX_PATTERN
 from backend.models.schemas import StepProof
 from backend.core.action_enrichment import enrich_action
 from backend.core.step_canonicalizer import canonicalize_step
+from backend.models.flow import NodeType
 
 log = logging.getLogger("flowai.extract")
 
@@ -50,6 +51,7 @@ CORE_VERBS=_load_core_verbs()
 STEP_SEPARATORS = [
     r"→", r"->", r"⇒", r">", r"•", r"‣", r"›",
     r"\|", r";", r",",
+    r"\.",r"\?",r"\!",
     r"\bsonra\b", r"\bardından\b", r"\btakiben\b", r"\bve\b"
 ]
 
@@ -155,16 +157,16 @@ def extract_steps_with_proof(text:str) -> List[StepProof]:
     def classify_step(action: str) -> str:
         a=action.lower()
         if any (k in a for k in ["onay","kontrol","eğer","ise"]):
-            return "decision"
+            return NodeType.decision
         if any(k in a for k in["kapan","iptal","son"]):
-            return "terminal"
+            return NodeType.terminal
         ACTION_KEYS = [
             "oluştur","aç","başlat","doldur","seç","bas","tıkla","tikla"
             ,"gir","yaz","ekle","çıkar","sil","güncelle","yükle","indir","gönder","kaydol"
         ]
         if any (k in a for k in ACTION_KEYS):
-            return "action"
-        return "trigger"
+            return NodeType.action
+        return NodeType.trigger
     spans=_split_with_spans(text)
 
     for start_idx,end_idx,snippet in spans:

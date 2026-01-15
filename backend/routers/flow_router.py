@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 import logging
 import uuid
-from pydantic import BaseModel
+
+from fastapi.responses import PlainTextResponse
+from backend.models.schemas import StepProof, ExtractRequest, MermaidResponse
 from backend.core.mermaid_exporter import graph_to_mermaid
 from backend.core.extraction_rules import extract_steps_with_proof
 from backend.models.schemas import StepProof,ExtractRequest
@@ -40,15 +42,22 @@ async def build_flow(req: ExtractRequest) -> FlowGraph:
     flow_id = str(uuid.uuid4())
     graph=steps_to_flow_graph(flow_id=flow_id,steps=steps)
 
-    log.info("flow: done flow_id=%s steps=%d edges=%d",flow_id,len(steps),len(graph.nodes),len(graph.edges))
+    log.info(
+        "flow: done flow_id=%s steps=%d nodes=%d edges=%d",
+        flow_id,len(steps),len(graph.nodes),len(graph.edges)
+        )
     return graph
 
-class MermaidResponse(BaseModel):
-    flow_id:str
-    mermaid: str
+
 
 @router.post("/flow/mermaid",response_model=MermaidResponse)
 async def flow_mermaid(req: ExtractRequest) -> MermaidResponse:
     graph = await build_flow(req)
     mermaid = graph_to_mermaid(graph)
-    return MermaidResponse(flow_id=graph.flow_id,mermaid=mermaid)
+    return MermaidResponse(ok=True,flow_id=graph.flow_id,mermaid=mermaid)
+
+@router.post("/flow/mermaid.txt",response_class=PlainTextResponse)
+async def flow_mermaid_txt(req: ExtractRequest) -> str:
+    graph = await build_flow(req)
+    return graph_to_mermaid(graph)
+

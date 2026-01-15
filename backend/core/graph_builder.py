@@ -47,14 +47,36 @@ def steps_to_flow_graph(
         )
         nodes.append(node)
 
-        if i > 1:
-            edges.append(
-                FlowEdge(
-                    source=f"n{i-1}",
-                    target=node_id,
-                    type=EdgeType.next,
+        if i< len(steps):
+            current_node_id = f"n{i}"
+            
+
+            if step.type == "decision":
+                edges.append(
+                    FlowEdge(
+                        source=current_node_id,
+                        target=f"n{i+1}",
+                        type=EdgeType.true,
+                    )
                 )
-            )
+                if i+1<len(steps):
+                    edges.append(
+                        FlowEdge(
+                            source=current_node_id,
+                            target=f"n{i+2}",
+                            type=EdgeType.false,
+                        )
+                    )
+            
+            else:
+                edges.append(
+                    FlowEdge(
+                        source=current_node_id,
+                        target=f"n{i+1}",
+                        type=EdgeType.next,
+                    )
+                )
+            
 
     return FlowGraph(
         flow_id=flow_id,
