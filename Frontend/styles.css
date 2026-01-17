@@ -125,3 +125,8 @@ pre {
 code{
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",monospace;
 }
+
+#diagram svg {
+  max-width: 100%;
+  height: auto;
+}
