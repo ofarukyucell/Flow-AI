@@ -50,12 +50,23 @@ CORE_VERBS=_load_core_verbs()
 
 STEP_SEPARATORS = [
     r"→", r"->", r"⇒", r">", r"•", r"‣", r"›",
-    r"\|", r";", r",",
+    r"\|", r";",
     r"\.",r"\?",r"\!",
-    r"\bsonra\b", r"\bardından\b", r"\btakiben\b", r"\bve\b"
+    r"\bsonra\b", r"\bardından\b", r"\btakiben\b",
 ]
 
+# Virgül ve 've' SADECE her iki tarafta da fiil varsa ayırıcı olarak kullanılır.
+# Bu ayrım _smart_split() içinde yapılır.
+
 SEP_REGEX = re.compile(rf"(?:{'|'.join(STEP_SEPARATORS)})", flags=re.IGNORECASE)
+
+# Virgül/ve için akıllı ayırıcı: sadece her iki tarafta fiil varsa böler
+SMART_SEP_RE = re.compile(r"\s*(?:,|ve)\s*", flags=re.IGNORECASE)
+
+
+def _contains_verb(text: str) -> bool:
+    """Verilen metin parçasında bilinen bir fiil var mı?"""
+    return bool(VERB_REGEX.search(text))
 
 def _split_with_spans(text:str)-> List[tuple[int,int,str]]:
     spans:List[tuple[int,int,str]]=[]
@@ -91,9 +102,25 @@ def _normalize(text: str) ->str:
     t= text.strip().lower()
     return t
 
-def _split_into_candidates(text:str) -> List[str]:
-    parts = [p.strip() for p in SEP_REGEX.split(text) if p and p.strip()]
-    return parts
+def _split_into_candidates(text: str) -> List[str]:
+    # Önce ana ayırıcılarla böl
+    primary_parts = [p.strip() for p in SEP_REGEX.split(text) if p and p.strip()]
+
+    # Sonra her parçayı virgül/ve ile akıllıca böl (sadece her iki taraf fiil içeriyorsa)
+    result = []
+    for part in primary_parts:
+        sub_parts = SMART_SEP_RE.split(part)
+        if len(sub_parts) <= 1:
+            result.append(part)
+            continue
+        # Her alt parçada fiil var mı kontrol et
+        all_have_verbs = all(_contains_verb(s) for s in sub_parts if s.strip())
+        if all_have_verbs:
+            result.extend(s.strip() for s in sub_parts if s.strip())
+        else:
+            # Fiil yoksa parçayı bölme, olduğu gibi bırak
+            result.append(part)
+    return result
 
 def _denoise(piece: str) ->str:
     p=NOISE_REGEX.sub(" ",piece)

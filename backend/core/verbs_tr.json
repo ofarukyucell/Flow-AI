@@ -1,6 +1,22 @@
 [
-    "giriş yap","çıkış yap","kaydol","kayıt ol","doğrula","onayla","temizle"
-    ,"analiz et","raporla","indir","yükle","oluştur","sil","güncelle","ara"
-    ,"paylaş","gönder","al","yapılandır","aç","kapat","faturala","filtrele"
-    ,"şey et","güzelleştir","bas","tıkla","tikla","seç","sec","doldur","giriş","gir"
+  "giriş yap", "çıkış yap", "kaydol", "kayıt ol", "doğrula", "onayla",
+  "temizle", "analiz et", "raporla", "indir", "yükle", "oluştur",
+  "sil", "güncelle", "ara", "paylaş", "gönder", "al", "yapılandır",
+  "aç", "kapat", "faturala", "filtrele", "bas", "tıkla", "tikla",
+  "seç", "sec", "doldur", "giriş", "gir", "yaz", "kaydet",
+  "kontrol et", "denetle", "izle", "takip et", "listele", "görüntüle",
+  "düzenle", "taşı", "kopyala", "yapıştır", "ekle", "çıkar",
+  "hesapla", "ölç", "test et", "denetle", "onayla", "reddet",
+  "ata", "devret", "eskalasyon yap", "geri bildir", "bildir",
+  "planla", "zamanlayıcı kur", "hatırlat", "not al",
+  "toplantı oluştur", "davet et", "iptal et", "ertele",
+  "arşivle", "yedekle", "geri yükle", "dışa aktar", "içe aktar",
+  "bağlan", "bağlantıyı kes", "yenile", "senkronize et",
+  "giris yap", "cikis yap", "olustur", "guncelle", "senkronize",
+  "optimize et", "sıkıştır", "şifrele", "şifre çöz",
+  "üret", "işle", "değerlendir", "önceliklendir", "sırala",
+  "grupla", "birleştir", "böl", "ayır", "karşılaştır",
+  "git", "gel", "çalış", "oku", "dinle", "izle", "bekle",
+  "başlat", "durdur", "devam et", "bitir", "tamamla",
+  "hazırla", "sun", "paylaş", "yayınla", "kaldır"
 ]

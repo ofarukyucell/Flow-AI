@@ -18,7 +18,6 @@ def graph_to_mermaid(graph:FlowGraph)-> str:
         
 
     for e in graph.edges:
-        print ("DEBUG EDGE: ", e.model_dump())
         if e.type == "next":
             lines.append(f"{e.source} --> {e.target}")
         elif e.type == "true":

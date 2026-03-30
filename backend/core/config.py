@@ -1,14 +1,25 @@
 from pathlib import Path
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from typing import List
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     APP_NAME: str
     APP_VERSION: str
     DEBUG: bool
 
-    model_config = SettingsConfigDict(
+    # Production'da virgülle ayrılmış origin listesi: "https://app.flowai.com,https://flowai.com"
+    CORS_ORIGINS: str = "*"
 
-        env_file=str(Path(__file__).resolve().parents[2]/".env")
+    @property
+    def allowed_origins(self) -> List[str]:
+        if self.CORS_ORIGINS == "*":
+            return ["*"]
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parents[2] / ".env")
     )
 
-settings=Settings()
+
+settings = Settings()
